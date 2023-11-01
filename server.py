@@ -1,8 +1,8 @@
 import socket
 import threading
 
-HOST = "127.0.0.1"
-IP = "192.168.1.35"
+HOST = "192.168.56.1"
+IP = "192.168.1.12"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -58,15 +58,18 @@ class Server:
             conn.sendall("RESPONSE 404".encode(FORMAT))
 
     def receive_message(self, conn, addr):
-        message = conn.recv(1024).decode(FORMAT)
-        if message == "END":
+        try:
+            message = conn.recv(1024).decode(FORMAT)
+            if message == "END":
+                return True
+            print("client:", addr, ", talks:", message)
+            data = input("Send back to client" + addr[0] + ": ")
+
+            conn.sendall(data.encode(FORMAT))
+
+            return False
+        except:
             return True
-        print("client:", addr, ", talks:", message)
-        data = input("Send back to client" + addr[0] + ": ")
-
-        conn.sendall(data.encode(FORMAT))
-
-        return False
 
 
 server = Server()

@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter.simpledialog import askstring
 from client import Client
 
 
@@ -7,20 +8,23 @@ class Client_Page(tk.Frame):
         tk.Frame.__init__(self, parrent)
 
         self.label_title = tk.Label(self, text="Client Side")
-        self.label_title.pack()
+        self.label_title.grid(row=0, column=0)
 
         self.label_chat = tk.Label(self, text="input message")
-        self.label_chat.pack()
+        self.label_chat.grid(row=1, column=0)
 
-        self.entry_message = tk.Entry(self)
-        self.entry_message.pack()
+        self.entry_message_var = tk.StringVar()
+
+        self.entry_message = tk.Entry(
+            self, textvariable=self.entry_message_var)
+        self.entry_message.grid(row=2, column=0)
 
         self.label_notice = tk.Label(self, text="")
-        self.label_notice.pack()
+        self.label_notice.grid(row=3, column=0)
 
         self.button_chat = tk.Button(
-            self, text="chat", command=lambda: self.chat())
-        self.button_chat.pack()
+            self, text="chat", command=self.chat)
+        self.button_chat.grid(row=4, column=0)
 
         self.client = Client()
 
@@ -34,21 +38,24 @@ class Client_Page(tk.Frame):
 
     def send_message(self):
         try:
-            message = self.entry_message.get()
+            message = self.entry_message_var.get()
+            self.entry_message_var.set("")
+            self.label_notice["text"] = "Waiting Server"
+            self.update_idletasks()
             if message == "":
                 return
-            self.entry_message.delete(0, tk.END)
-            rec = self.client.send_message(message)
-            self.label_notice["text"] = "Server responses: " + rec
+            self.client.send_message(message)
         except:
             self.__del__()
 
-    def chat(self):
-        self.waiting()
-        self.send_message()
+    def receive_message(self):
+        rec = self.client.receive_message()
+        self.label_notice["text"] = "Server responses: " + rec
+        self.update_idletasks()
 
-    def waiting(self):
-        self.label_notice["text"] = "Waiting"
+    def chat(self):
+        self.send_message()
+        self.receive_message()
 
 
 class App(tk.Tk):
@@ -57,7 +64,7 @@ class App(tk.Tk):
 
         self.title("File Sharing Application")
         self.geometry("500x200")
-        self.resizable(width=False, height=False)
+        # self.resizable(width=False, height=False)
 
         self.container = tk.Frame()
         self.client_page = Client_Page(self.container)

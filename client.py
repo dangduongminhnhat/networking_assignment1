@@ -1,6 +1,6 @@
 import socket
 
-HOST = "127.0.0.1"
+HOST = "192.168.56.1"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -26,4 +26,5 @@ class Client:
     def send_message(self, message):
         self.soc.sendall(message.encode(FORMAT))
 
+    def receive_message(self):
         return self.soc.recv(1024).decode(FORMAT)
