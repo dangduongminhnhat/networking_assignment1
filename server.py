@@ -1,5 +1,6 @@
 import socket
 import threading
+import json
 
 HOST = "192.168.56.1"
 IP = "192.168.1.12"
@@ -18,6 +19,9 @@ class Server:
 
         self.soc.bind((HOST, SERVER_PORT))
         self.soc.listen()
+
+        self.clients = {}
+        self.file_names = {}
 
     def server_run(self):
         nClient = 0
@@ -39,9 +43,9 @@ class Server:
         print("client address:", addr)
         print("conn:", conn.getsockname())
 
-        self.accept_connection(conn, addr)
+        accept = self.accept_connection(conn, addr)
 
-        while True:
+        while accept:
             end = self.receive_message(conn, addr)
             if end:
                 break
@@ -51,25 +55,45 @@ class Server:
 
     def accept_connection(self, conn, addr):
         rec = conn.recv(1024).decode(FORMAT)
-        print("Receive =", rec)
-        if rec == "REQUEST":
+        print("client:", addr, ", talks:", rec)
+        if rec == "REQUEST CONNECTION":
             conn.sendall("RESPONSE 200".encode(FORMAT))
+            return True
         else:
             conn.sendall("RESPONSE 404".encode(FORMAT))
+            return False
 
     def receive_message(self, conn, addr):
         try:
             message = conn.recv(1024).decode(FORMAT)
+            print("client:", addr, ", talks:", message)
             if message == "END":
                 return True
-            print("client:", addr, ", talks:", message)
-            data = input("Send back to client" + addr[0] + ": ")
-
-            conn.sendall(data.encode(FORMAT))
-
+            elif message == "REQUEST PUBLISH":
+                self.publish(conn, addr)
             return False
         except:
             return True
+
+    def publish(self, conn, addr):
+        rec = conn.recv(1024).decode(FORMAT)
+        rec = json.loads(rec)
+
+        if not "file_name" in rec or not "local_name" in rec:
+            conn.sendall("RESPONSE 404".encode(FORMAT))
+            return
+        elif not addr in self.clients:
+            self.clients[addr] = {rec["file_name"]: rec["local_name"]}
+        else:
+            if rec["file_name"] in self.clients[addr]:
+                conn.sendall("RESPONSE 404".encode(FORMAT))
+                return
+            self.clients[addr][rec["file_name"]] = rec["local_name"]
+        if rec["file_name"] not in self.file_names:
+            self.file_names[rec["file_name"]] = [addr]
+        else:
+            self.file_names.append(addr)
+        conn.sendall("RESPONSE 200".encode(FORMAT))
 
 
 server = Server()

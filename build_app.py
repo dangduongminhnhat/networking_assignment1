@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter.simpledialog import askstring
 from client import Client
+from tkinter.filedialog import askopenfile
 
 
 class Client_Page(tk.Frame):
@@ -58,24 +58,92 @@ class Client_Page(tk.Frame):
         self.receive_message()
 
 
+class Start_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.label_welcome = tk.Label(
+            self, text="Welcome to our file-sharing app")
+        self.label_welcome.pack()
+
+        self.label_option = tk.Label(self, text="Choose your option:")
+        self.label_option.pack()
+
+        self.button_share = tk.Button(
+            self, text="Sharing your file", command=lambda: app_controller.show_page(Share_Page))
+        self.button_share.pack()
+
+        self.button_download = tk.Button(self, text="Download file")
+        self.button_download.pack()
+
+
+class Share_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.app_controller = app_controller
+
+        self.button_back = tk.Button(
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+        self.button_back.pack()
+
+        self.label_work = tk.Label(self, text="Choose your file:")
+        self.label_work.pack()
+
+        self.button_choose = tk.Button(
+            self, text="Select file", command=self.publish)
+        self.button_choose.pack()
+
+        self.label_file = tk.Label(self, text="Nothing to share")
+        self.label_file.pack()
+
+    def publish(self):
+        file = askopenfile()
+        local_name = file.name
+        file_name = local_name.split("/")[-1]
+        self.label_file["text"] = "Waiting to publish"
+        self.update_idletasks()
+
+        pub = self.app_controller.client.publish(file_name, local_name)
+        if pub:
+            self.label_file["text"] = "Publish sucessfully, share new file"
+            self.update_idletasks()
+        else:
+            self.label_file["text"] = "Publish failed, share new file"
+            self.update_idletasks()
+
+
 class App(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
+
+        self.client = Client()
 
         self.title("File Sharing Application")
         self.geometry("500x200")
         # self.resizable(width=False, height=False)
 
         self.container = tk.Frame()
-        self.client_page = Client_Page(self.container)
 
         self.container.pack(side="top", fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
-        self.client_page.grid(row=0, column=0, sticky="nsew")
+        self.frames = {}
 
-        self.client_page.tkraise()
+        for f in {Start_Page, Share_Page}:
+            frame = f(self.container, self)
+            frame.grid(row=0, column=0, sticky="nsew")
+            self.frames[f] = frame
+
+        self.frames[Start_Page].tkraise()
+
+    def show_page(self, frame):
+        self.frames[frame].tkraise()
+
+    def __del__(self):
+        self.client.send_message("END")
+        self.client.soc.close()
 
 
 app = App()
