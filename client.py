@@ -33,15 +33,22 @@ class Client:
     def publish(self, file_name, local_name):
         self.send_message("REQUEST PUBLISH")
 
-        file_package = {"file_name": file_name, "local_name": local_name}
-        file_package = json.dumps(file_package)
-
-        self.send_message(file_package)
-
         rec = self.receive_message()
         print(rec)
 
         if rec == "RESPONSE 200":
-            return True
+            file_package = {"file_name": file_name, "local_name": local_name}
+            file_package = json.dumps(file_package)
+
+            self.send_message(file_package)
+
+            rec = self.receive_message()
+            print(rec)
+
+            if rec == "RESPONSE 200":
+                return True
+            else:
+                print("------")
+                return False
         else:
             return False

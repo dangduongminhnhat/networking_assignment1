@@ -25,7 +25,7 @@ class Server:
 
     def server_run(self):
         nClient = 0
-        while nClient < 1:
+        while nClient < 2:
             try:
                 conn, addr = self.soc.accept()
 
@@ -76,24 +76,29 @@ class Server:
             return True
 
     def publish(self, conn, addr):
-        rec = conn.recv(1024).decode(FORMAT)
-        rec = json.loads(rec)
+        conn.sendall("RESPONSE 200".encode(FORMAT))
+        try:
+            rec = conn.recv(1024).decode(FORMAT)
+            rec = json.loads(rec)
 
-        if not "file_name" in rec or not "local_name" in rec:
-            conn.sendall("RESPONSE 404".encode(FORMAT))
-            return
-        elif not addr in self.clients:
-            self.clients[addr] = {rec["file_name"]: rec["local_name"]}
-        else:
-            if rec["file_name"] in self.clients[addr]:
+            if not "file_name" in rec or not "local_name" in rec:
                 conn.sendall("RESPONSE 404".encode(FORMAT))
                 return
-            self.clients[addr][rec["file_name"]] = rec["local_name"]
-        if rec["file_name"] not in self.file_names:
-            self.file_names[rec["file_name"]] = [addr]
-        else:
-            self.file_names.append(addr)
-        conn.sendall("RESPONSE 200".encode(FORMAT))
+            if not addr in self.clients:
+                self.clients[addr] = {rec["file_name"]: rec["local_name"]}
+            else:
+                if rec["file_name"] in self.clients[addr]:
+                    conn.sendall("RESPONSE 404".encode(FORMAT))
+                    return
+                self.clients[addr][rec["file_name"]] = rec["local_name"]
+            if rec["file_name"] not in self.file_names:
+                self.file_names[rec["file_name"]] = [addr]
+            else:
+                self.file_names[rec["file_name"]].append(addr)
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            conn.sendall("RESPONSE 404".encode(FORMAT))
+            return
 
 
 server = Server()

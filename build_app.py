@@ -58,6 +58,14 @@ class Client_Page(tk.Frame):
         self.receive_message()
 
 
+class Dead_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.label_notice = tk.Label(self, text="Server is dead")
+        self.label_notice.pack()
+
+
 class Start_Page(tk.Frame):
     def __init__(self, parrent, app_controller):
         tk.Frame.__init__(self, parrent)
@@ -131,19 +139,24 @@ class App(tk.Tk):
 
         self.frames = {}
 
-        for f in {Start_Page, Share_Page}:
+        for f in {Dead_Page, Start_Page, Share_Page}:
             frame = f(self.container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[f] = frame
-
-        self.frames[Start_Page].tkraise()
+        if self.client.status:
+            self.frames[Start_Page].tkraise()
+        else:
+            self.frames[Dead_Page].tkraise()
 
     def show_page(self, frame):
         self.frames[frame].tkraise()
 
     def __del__(self):
-        self.client.send_message("END")
-        self.client.soc.close()
+        try:
+            self.client.send_message("END")
+            self.client.soc.close()
+        except:
+            None
 
 
 app = App()
