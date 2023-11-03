@@ -1,3 +1,3 @@
-file = open("C:/Users/GAMING/Downloads/Capture.PNG", "rb")
+import socket
 
-print(file.read())
+print(socket.gethostname())

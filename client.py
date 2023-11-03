@@ -29,6 +29,8 @@ class Client:
         try:
             self.soc.connect((HOST, SERVER_PORT))
 
+            print("CLIENT", self.soc.getsockname())
+
             self.send_message("REQUEST CONNECTION")
 
             rec = self.receive_message()
@@ -84,7 +86,6 @@ class Client:
         if req:
             for addr, local_file in req:
                 if (addr[0], addr[1]) == self.soc.getsockname():
-                    print(local_file)
                     if os.path.exists(local_file):
                         return local_file
                     else:
@@ -96,7 +97,7 @@ class Client:
         return False
 
     def get_file(self, addr, local_file):
-        socket_temp = self.soc = socket.socket(
+        socket_temp = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM)
 
         try:
@@ -138,6 +139,8 @@ class Client:
 
                 file.write(data)
                 file.close()
+
+                socket_temp.close()
 
                 return file_name
 
