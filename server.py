@@ -2,7 +2,7 @@ import socket
 import threading
 import json
 
-HOST = "192.168.56.1"
+HOST = "127.0.0.1"
 IP = "192.168.1.12"
 SERVER_PORT = 65432
 FORMAT = "utf8"
@@ -10,7 +10,7 @@ FORMAT = "utf8"
 
 print("SERVER SIDE")
 print("server:", HOST, SERVER_PORT)
-print("Waiting for Client")
+print("Waiting for Clients")
 
 
 class Server:
@@ -25,7 +25,7 @@ class Server:
 
     def server_run(self):
         nClient = 0
-        while nClient < 2:
+        while nClient < 100:
             try:
                 conn, addr = self.soc.accept()
 
@@ -48,6 +48,7 @@ class Server:
         while accept:
             end = self.receive_message(conn, addr)
             if end:
+                self.clients.pop(addr, None)
                 break
         print("client", addr, "finished")
         print(conn.getsockname(), "closed")
@@ -69,36 +70,88 @@ class Server:
             print("client:", addr, ", talks:", message)
             if message == "END":
                 return True
-            elif message == "REQUEST PUBLISH":
-                self.publish(conn, addr)
-            return False
+            elif message == "SEND":
+                end = self.publish(conn, addr)
+            elif message == "REQUEST FILE":
+                end = self.send_list_clients(conn, addr)
+            return end
         except:
             return True
 
     def publish(self, conn, addr):
-        conn.sendall("RESPONSE 200".encode(FORMAT))
+        try:
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            return True
         try:
             rec = conn.recv(1024).decode(FORMAT)
             rec = json.loads(rec)
 
             if not "file_name" in rec or not "local_name" in rec:
                 conn.sendall("RESPONSE 404".encode(FORMAT))
-                return
+                return False
             if not addr in self.clients:
                 self.clients[addr] = {rec["file_name"]: rec["local_name"]}
             else:
                 if rec["file_name"] in self.clients[addr]:
                     conn.sendall("RESPONSE 404".encode(FORMAT))
-                    return
+                    return False
                 self.clients[addr][rec["file_name"]] = rec["local_name"]
             if rec["file_name"] not in self.file_names:
                 self.file_names[rec["file_name"]] = [addr]
             else:
                 self.file_names[rec["file_name"]].append(addr)
             conn.sendall("RESPONSE 200".encode(FORMAT))
+            return False
         except:
             conn.sendall("RESPONSE 404".encode(FORMAT))
-            return
+            return False
+
+    def send_list_clients(self, conn, addr):
+        try:
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            return True
+
+        file_name = conn.recv(1024).decode(FORMAT)
+
+        to_send = {}
+        if file_name in self.file_names:
+            to_send["availability"] = "yes"
+            clients = []
+            for host in self.file_names[file_name]:
+                if not host in self.clients or not self.ping(host):
+                    continue
+                else:
+                    clients.append(host)
+            self.file_names[file_name] = clients
+            hash_names = []
+            for cli in clients:
+                hash_names.append((cli, self.clients[cli][file_name]))
+            to_send["host_names"] = hash_names
+        else:
+            to_send["availability"] = "no"
+
+        to_send = json.dumps(to_send)
+        conn.sendall(to_send.encode(FORMAT))
+
+        return False
+
+    def ping(self, hostname):
+        try:
+            temp_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            temp_soc.connect(hostname)
+            temp_soc.sendall("PING".encode(FORMAT))
+
+            rec = temp_soc.recv(1024).decode(FORMAT)
+            print("client", hostname, "sends", rec)
+            temp_soc.close()
+            if rec == "RESPONSE 200":
+                return True
+            else:
+                return False
+        except:
+            return False
 
 
 server = Server()

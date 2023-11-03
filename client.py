@@ -1,7 +1,9 @@
 import socket
 import json
+import threading
+import os
 
-HOST = "192.168.56.1"
+HOST = "127.0.0.1"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -12,11 +14,21 @@ class Client:
 
         print("CLIENT SIDE")
         self.status = self.init_connection()
-        print(self.status)
+        print("Server sends:", self.status)
+        if self.status:
+            self.name = self.soc.getsockname()
+            self.host = self.name[0]
+            self.port = self.name[1]
+
+            self.socket_client = socket.socket(
+                socket.AF_INET, socket.SOCK_STREAM)
+            self.socket_client.bind((self.host, self.port))
+            self.socket_client.listen()
 
     def init_connection(self):
         try:
             self.soc.connect((HOST, SERVER_PORT))
+
             self.send_message("REQUEST CONNECTION")
 
             rec = self.receive_message()
@@ -31,10 +43,10 @@ class Client:
         return self.soc.recv(1024).decode(FORMAT)
 
     def publish(self, file_name, local_name):
-        self.send_message("REQUEST PUBLISH")
+        self.send_message("SEND")
 
         rec = self.receive_message()
-        print(rec)
+        print("Server sends:", rec)
 
         if rec == "RESPONSE 200":
             file_package = {"file_name": file_name, "local_name": local_name}
@@ -43,12 +55,136 @@ class Client:
             self.send_message(file_package)
 
             rec = self.receive_message()
-            print(rec)
+            print("Server sends:", rec)
 
             if rec == "RESPONSE 200":
                 return True
             else:
-                print("------")
                 return False
         else:
             return False
+
+    def request_file(self, file_name):
+        self.send_message("REQUEST FILE")
+
+        rec = self.receive_message()
+        print("Server sends:", rec)
+
+        if rec == "RESPONSE 200":
+            self.send_message(file_name)
+            rec = self.receive_message()
+            rec = json.loads(rec)
+            if rec["availability"] == "yes":
+                return rec["host_names"]
+            else:
+                return None
+
+    def fetch(self, file_name):
+        req = self.request_file(file_name)
+        if req:
+            for addr, local_file in req:
+                if (addr[0], addr[1]) == self.soc.getsockname():
+                    print(local_file)
+                    if os.path.exists(local_file):
+                        return local_file
+                    else:
+                        return False
+                else:
+                    get = self.get_file(addr, local_file)
+                if get:
+                    return get
+        return False
+
+    def get_file(self, addr, local_file):
+        socket_temp = self.soc = socket.socket(
+            socket.AF_INET, socket.SOCK_STREAM)
+
+        try:
+            socket_temp.connect((addr[0], addr[1]))
+
+            socket_temp.sendall("FETCH".encode(FORMAT))
+            rec = socket_temp.recv(1024).decode(FORMAT)
+
+            print("client", addr, ", sends", rec)
+            if rec == "RESPONSE 200":
+                socket_temp.sendall(local_file.encode(FORMAT))
+
+                rec = socket_temp.recv(1024).decode(FORMAT)
+
+                print("client", addr, ", sends", rec)
+
+                size = socket_temp.recv(1024).decode(FORMAT)
+
+                data = b""
+                for _ in range(int(size) // 1024 + 1):
+                    try:
+                        rec = socket_temp.recv(1024)
+                        data += rec
+                    except:
+                        break
+
+                directory = os.getcwd() + "\\file_sharing"
+
+                try:
+                    os.mkdir(directory)
+                except:
+                    None
+
+                file_name = directory + "\\" + local_file.split("/")[-1]
+                file = open(file_name, "wb")
+
+                file.write(data)
+                file.close()
+
+                return file_name
+
+        except:
+            return None
+
+    def client_run(self):
+        while self.status:
+            try:
+                conn, addr = self.socket_client.accept()
+
+                thr = threading.Thread(
+                    target=self.handle_client, args=(conn, addr))
+                thr.daemon = False
+                thr.start()
+
+            except:
+                break
+
+    def handle_client(self, conn, addr):
+        print("client address:", addr)
+        print("conn:", conn.getsockname())
+
+        try:
+            message = conn.recv(1024).decode(FORMAT)
+            print("client:", addr, ", talks:", message)
+
+            if message == "PING":
+                conn.sendall("RESPONSE 200".encode(FORMAT))
+            if message == "FETCH":
+                conn.sendall("RESPONSE 200".encode(FORMAT))
+
+                self.send_file(conn, addr)
+        except:
+            return
+
+    def send_file(self, conn, addr):
+        local_file = conn.recv(1024).decode(FORMAT)
+
+        if os.path.exists(local_file):
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+
+            file = open(local_file, "rb")
+            data = file.read()
+
+            conn.sendall(str(len(data)).encode(FORMAT))
+
+            for i in range(0, len(data), 1024):
+                conn.sendall(data[i:i + 1024])
+
+            file.close()
+        else:
+            conn.sendall("RESPONSE 404".encode(FORMAT))
