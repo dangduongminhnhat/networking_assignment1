@@ -3,7 +3,7 @@ import json
 import threading
 import os
 
-HOST = "127.0.0.1"
+HOST = "192.168.1.121"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -115,10 +115,13 @@ class Client:
 
                 size = socket_temp.recv(1024).decode(FORMAT)
 
+                socket_temp.sendall("SEND".encode(FORMAT))
+
                 data = b""
                 for _ in range(int(size) // 1024 + 1):
                     try:
                         rec = socket_temp.recv(1024)
+                        socket_temp.sendall("SEND".encode(FORMAT))
                         data += rec
                     except:
                         break
@@ -182,8 +185,11 @@ class Client:
 
             conn.sendall(str(len(data)).encode(FORMAT))
 
+            conn.recv(1024).decode(FORMAT)
+
             for i in range(0, len(data), 1024):
                 conn.sendall(data[i:i + 1024])
+                conn.recv(1024).decode(FORMAT)
 
             file.close()
         else:
