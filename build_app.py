@@ -4,61 +4,6 @@ from tkinter.filedialog import askopenfile
 import threading
 
 
-class Client_Page(tk.Frame):
-    def __init__(self, parrent):
-        tk.Frame.__init__(self, parrent)
-
-        self.label_title = tk.Label(self, text="Client Side")
-        self.label_title.grid(row=0, column=0)
-
-        self.label_chat = tk.Label(self, text="input message")
-        self.label_chat.grid(row=1, column=0)
-
-        self.entry_message_var = tk.StringVar()
-
-        self.entry_message = tk.Entry(
-            self, textvariable=self.entry_message_var)
-        self.entry_message.grid(row=2, column=0)
-
-        self.label_notice = tk.Label(self, text="")
-        self.label_notice.grid(row=3, column=0)
-
-        self.button_chat = tk.Button(
-            self, text="chat", command=self.chat)
-        self.button_chat.grid(row=4, column=0)
-
-        self.client = Client()
-
-    def __del__(self):
-        try:
-            self.client.send_message("END")
-            print("Ending")
-        except:
-            print("Ending")
-        self.client.soc.close()
-
-    def send_message(self):
-        try:
-            message = self.entry_message_var.get()
-            self.entry_message_var.set("")
-            self.label_notice["text"] = "Waiting Server"
-            self.update_idletasks()
-            if message == "":
-                return
-            self.client.send_message(message)
-        except:
-            self.__del__()
-
-    def receive_message(self):
-        rec = self.client.receive_message()
-        self.label_notice["text"] = "Server responses: " + rec
-        self.update_idletasks()
-
-    def chat(self):
-        self.send_message()
-        self.receive_message()
-
-
 class Dead_Page(tk.Frame):
     def __init__(self, parrent, app_controller):
         tk.Frame.__init__(self, parrent)
