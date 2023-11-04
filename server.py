@@ -2,7 +2,7 @@ import socket
 import threading
 import json
 
-HOST = "192.168.1.121"
+HOST = "127.0.0.1"
 IP = "192.168.1.12"
 SERVER_PORT = 65432
 FORMAT = "utf8"
@@ -24,8 +24,9 @@ class Server:
         self.file_names = {}
 
     def server_run(self):
-        nClient = 0
-        while nClient < 100:
+        while True:
+            if len(self.clients) >= 5:
+                continue
             try:
                 conn, addr = self.soc.accept()
 
@@ -36,8 +37,6 @@ class Server:
 
             except:
                 print("Error")
-
-            nClient += 1
 
     def handle_client(self, conn, addr):
         print("client address:", addr)

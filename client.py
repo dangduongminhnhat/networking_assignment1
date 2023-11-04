@@ -3,7 +3,7 @@ import json
 import threading
 import os
 
-HOST = "192.168.1.121"
+HOST = "127.0.0.1"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 

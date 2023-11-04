@@ -46,17 +46,53 @@ class Share_Page(tk.Frame):
         self.label_work.pack()
 
         self.button_choose = tk.Button(
-            self, text="Select file", command=self.publish)
+            self, text="Select file", command=self.select_file)
         self.button_choose.pack()
+
+        self.label_choose = tk.Label(self, text="Input your file name:")
+        self.label_choose.pack()
+
+        self.entry_local_name_var = tk.StringVar()
+
+        self.entry_local_name = tk.Entry(
+            self, textvariable=self.entry_local_name_var)
+        self.entry_local_name.pack()
+
+        self.button_publish = tk.Button(
+            self, text="Publish", command=self.publish)
+        self.button_publish.pack()
 
         self.label_file = tk.Label(self, text="Nothing to share")
         self.label_file.pack()
 
+    def select_file(self):
+        self.file = askopenfile()
+
+        self.label_file["text"] = "Your selected file is " + self.file.name
+        self.update_idletasks()
+
     def publish(self):
-        file = askopenfile()
-        local_name = file.name
-        file_name = local_name.split("/")[-1]
+        local_name = self.file.name
+        file_name = self.entry_local_name_var.get()
+
+        if "." in local_name:
+            post_fix_local = local_name.split(".")[-1]
+            if not "." in file_name:
+                self.label_file["text"] = "Your file's name has to be *." + \
+                    post_fix_local
+                self.update_idletasks()
+
+                return
+            post_fix_file = file_name.split(".")[-1]
+            if post_fix_file != post_fix_local:
+                self.label_file["text"] = "Your file's name has to be *." + \
+                    post_fix_local
+                self.update_idletasks()
+
+                return
+
         self.label_file["text"] = "Waiting to publish"
+        self.entry_local_name_var.set("")
         self.update_idletasks()
 
         pub = self.app_controller.client.publish(file_name, local_name)
