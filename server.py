@@ -17,6 +17,8 @@ class Server:
     def __init__(self):
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.status = True
+
         self.soc.bind((HOST, SERVER_PORT))
         self.soc.listen()
 
@@ -24,7 +26,7 @@ class Server:
         self.file_names = {}
 
     def server_run(self):
-        while True:
+        while self.status:
             if len(self.clients) >= 5:
                 continue
             try:
@@ -36,7 +38,7 @@ class Server:
                 thr.start()
 
             except:
-                print("Error")
+                break
 
     def handle_client(self, conn, addr):
         print("client address:", addr)
@@ -57,6 +59,7 @@ class Server:
         rec = conn.recv(1024).decode(FORMAT)
         print("client:", addr, "sends", rec)
         if rec == "REQUEST CONNECTION":
+            self.clients[addr] = {}
             conn.sendall("RESPONSE 200".encode(FORMAT))
             return True
         else:
@@ -159,7 +162,7 @@ class Server:
             return False
 
     def discover(self, hostname):
-        print(self.clients[hostname])
+        return self.clients[hostname]
 
     def send_list(self, conn, addr):
         try:
@@ -171,8 +174,3 @@ class Server:
         dic = json.dumps(dic)
 
         conn.sendall(dic.encode(FORMAT))
-
-
-server = Server()
-server.server_run()
-server.soc.close()
