@@ -2,6 +2,7 @@ import socket
 import json
 import threading
 import os
+from tkinter.filedialog import asksaveasfilename
 
 HOST = "127.0.0.1"
 SERVER_PORT = 65432
@@ -14,7 +15,7 @@ class Client:
 
         print("CLIENT SIDE")
         self.status = self.init_connection()
-        print("Server sends:", self.status)
+        print("Server sends", self.status)
         if self.status:
             self.name = self.soc.getsockname()
             self.host = self.name[0]
@@ -48,7 +49,7 @@ class Client:
         self.send_message("SEND")
 
         rec = self.receive_message()
-        print("Server sends:", rec)
+        print("Server sends", rec)
 
         if rec == "RESPONSE 200":
             file_package = {"file_name": file_name, "local_name": local_name}
@@ -57,7 +58,7 @@ class Client:
             self.send_message(file_package)
 
             rec = self.receive_message()
-            print("Server sends:", rec)
+            print("Server sends", rec)
 
             if rec == "RESPONSE 200":
                 return True
@@ -70,7 +71,7 @@ class Client:
         self.send_message("REQUEST FILE")
 
         rec = self.receive_message()
-        print("Server sends:", rec)
+        print("Server sends", rec)
 
         if rec == "RESPONSE 200":
             self.send_message(file_name)
@@ -106,13 +107,16 @@ class Client:
             socket_temp.sendall("FETCH".encode(FORMAT))
             rec = socket_temp.recv(1024).decode(FORMAT)
 
-            print("client", addr, ", sends", rec)
+            print("client", addr, "sends", rec)
             if rec == "RESPONSE 200":
                 socket_temp.sendall(local_file.encode(FORMAT))
 
                 rec = socket_temp.recv(1024).decode(FORMAT)
 
-                print("client", addr, ", sends", rec)
+                print("client", addr, "sends", rec)
+
+                if rec != "RESPONSE 200":
+                    return None
 
                 size = socket_temp.recv(1024).decode(FORMAT)
 
@@ -127,14 +131,19 @@ class Client:
                     except:
                         break
 
-                directory = os.getcwd() + "\\file_sharing"
+                files = [('All Files', '*.*')]
+                file_name = asksaveasfilename(
+                    filetypes=files, defaultextension=files)
 
-                try:
-                    os.mkdir(directory)
-                except:
-                    None
+                if not file_name:
+                    directory = os.getcwd() + "\\file_sharing"
 
-                file_name = directory + "\\" + local_file.split("/")[-1]
+                    try:
+                        os.mkdir(directory)
+                    except:
+                        None
+
+                    file_name = directory + "\\" + local_file.split("/")[-1]
                 file = open(file_name, "wb")
 
                 file.write(data)
@@ -162,11 +171,11 @@ class Client:
 
     def handle_client(self, conn, addr):
         print("client address:", addr)
-        print("conn:", conn.getsockname())
+        print("connection:", conn.getsockname())
 
         try:
             message = conn.recv(1024).decode(FORMAT)
-            print("client:", addr, ", talks:", message)
+            print("client:", addr, "sends", message)
 
             if message == "PING":
                 conn.sendall("RESPONSE 200".encode(FORMAT))
@@ -197,3 +206,18 @@ class Client:
             file.close()
         else:
             conn.sendall("RESPONSE 404".encode(FORMAT))
+
+    def get_list(self):
+        try:
+            self.send_message("GET LIST")
+
+            rec = self.receive_message()
+            print("Server sends", rec)
+
+            if rec == "RESPONSE 200":
+                self.send_message("SEND")
+
+                lis = self.receive_message()
+                return lis
+        except:
+            return None

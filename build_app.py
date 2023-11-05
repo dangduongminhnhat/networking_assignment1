@@ -2,6 +2,8 @@ import tkinter as tk
 from client import Client
 from tkinter.filedialog import askopenfile
 import threading
+from tkinter import ttk
+import json
 
 
 class Dead_Page(tk.Frame):
@@ -30,6 +32,10 @@ class Start_Page(tk.Frame):
         self.button_download = tk.Button(
             self, text="Download file", command=lambda: app_controller.show_page(Download_Page))
         self.button_download.pack()
+
+        self.button_list = tk.Button(
+            self, text="List file", command=lambda: app_controller.show_page(List_Page))
+        self.button_list.pack()
 
 
 class Share_Page(tk.Frame):
@@ -72,7 +78,14 @@ class Share_Page(tk.Frame):
         self.update_idletasks()
 
     def publish(self):
-        local_name = self.file.name
+        try:
+            local_name = self.file.name
+            self.file = None
+        except:
+            self.label_file["text"] = "You have to select file"
+            self.update_idletasks()
+
+            return
         file_name = self.entry_local_name_var.get()
 
         if "." in local_name:
@@ -151,6 +164,59 @@ class Download_Page(tk.Frame):
             self.update_idletasks()
 
 
+class List_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.app_controller = app_controller
+
+        self.button_back = tk.Button(
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+        self.button_back.pack()
+
+        self.scroll = tk.Scrollbar(self)
+        self.scroll.pack(side='right', fill='y')
+
+        self.scroll = tk.Scrollbar(self, orient='horizontal')
+        self.scroll.pack(side='bottom', fill='x')
+
+        self.table = ttk.Treeview(
+            self, yscrollcommand=self.scroll.set, xscrollcommand=self.scroll.set)
+        self.table.pack()
+
+        self.scroll.config(command=self.table.yview)
+        self.scroll.config(command=self.table.xview)
+
+        self.table['columns'] = ('File Name', 'Host Name')
+
+        self.table.column("#0", width=0,  stretch=False)
+        self.table.column("File Name", anchor="center", width=200)
+        self.table.column("Host Name", anchor="center", width=200)
+
+        self.table.heading("#0", text="", anchor="center")
+        self.table.heading("File Name", text="File Name", anchor="center")
+        self.table.heading("Host Name", text="Host Name", anchor="center")
+
+        self.button_get = tk.Button(
+            self, text="Get list", command=self.get_list)
+        self.button_get.pack()
+
+    def get_list(self):
+        for row in self.table.get_children():
+            self.table.delete(row)
+
+        lis = self.app_controller.client.get_list()
+        lis = json.loads(lis)
+
+        count = 0
+        for file in lis:
+            self.table.insert(
+                parent='', index='end', iid={count}, text='', values=(file, lis[file]))
+            count += 1
+
+        self.update_idletasks()
+
+
 class App(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
@@ -158,8 +224,7 @@ class App(tk.Tk):
         self.client = Client()
 
         self.title("File Sharing Application")
-        self.geometry("300x150")
-        # self.resizable(width=False, height=False)
+        self.geometry("500x500")
 
         self.container = tk.Frame()
 
@@ -169,7 +234,7 @@ class App(tk.Tk):
 
         self.frames = {}
 
-        for f in {Dead_Page, Start_Page, Share_Page, Download_Page}:
+        for f in {Dead_Page, Start_Page, Share_Page, Download_Page, List_Page}:
             frame = f(self.container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[f] = frame
@@ -194,8 +259,11 @@ class App(tk.Tk):
         thread1.start()
 
         self.mainloop()
-        self.client.socket_client.close()
-        self.client.status = False
+        try:
+            self.client.socket_client.close()
+            self.client.status = False
+        except:
+            None
 
 
 app = App()

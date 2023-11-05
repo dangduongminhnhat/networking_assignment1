@@ -55,7 +55,7 @@ class Server:
 
     def accept_connection(self, conn, addr):
         rec = conn.recv(1024).decode(FORMAT)
-        print("client:", addr, ", talks:", rec)
+        print("client:", addr, "sends", rec)
         if rec == "REQUEST CONNECTION":
             conn.sendall("RESPONSE 200".encode(FORMAT))
             return True
@@ -66,13 +66,15 @@ class Server:
     def receive_message(self, conn, addr):
         try:
             message = conn.recv(1024).decode(FORMAT)
-            print("client:", addr, ", talks:", message)
+            print("client:", addr, "sends", message)
             if message == "END":
                 return True
             elif message == "SEND":
                 end = self.publish(conn, addr)
             elif message == "REQUEST FILE":
                 end = self.send_list_clients(conn, addr)
+            elif message == "GET LIST":
+                end = self.send_list(conn, addr)
             return end
         except:
             return True
@@ -124,6 +126,8 @@ class Server:
                 else:
                     clients.append(host)
             self.file_names[file_name] = clients
+            if len(self.file_names[file_name]) == 0:
+                self.file_names.pop(file_name)
             hash_names = []
             for cli in clients:
                 hash_names.append((cli, self.clients[cli][file_name]))
@@ -137,6 +141,8 @@ class Server:
         return False
 
     def ping(self, hostname):
+        if not hostname in self.clients:
+            return False
         try:
             temp_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             temp_soc.connect(hostname)
@@ -151,6 +157,20 @@ class Server:
                 return False
         except:
             return False
+
+    def discover(self, hostname):
+        print(self.clients[hostname])
+
+    def send_list(self, conn, addr):
+        try:
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            return True
+        rec = conn.recv(1024).decode(FORMAT)
+        dic = self.file_names
+        dic = json.dumps(dic)
+
+        conn.sendall(dic.encode(FORMAT))
 
 
 server = Server()
