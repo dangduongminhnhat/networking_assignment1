@@ -37,6 +37,10 @@ class Start_Page(tk.Frame):
             self, text="List file", command=lambda: app_controller.show_page(List_Page))
         self.button_list.pack()
 
+        self.button_mine = tk.Button(
+            self, text="Get my published file", command=lambda: app_controller.show_page(List_Mine_Page))
+        self.button_mine.pack()
+
 
 class Share_Page(tk.Frame):
     def __init__(self, parrent, app_controller):
@@ -195,7 +199,8 @@ class List_Page(tk.Frame):
 
         self.table.heading("#0", text="", anchor="center")
         self.table.heading("File Name", text="File Name", anchor="center")
-        self.table.heading("Host Name", text="Host Name", anchor="center")
+        self.table.heading(
+            "Host Name", text="Number of owners", anchor="center")
 
         self.button_get = tk.Button(
             self, text="Get list", command=self.get_list)
@@ -211,10 +216,57 @@ class List_Page(tk.Frame):
         count = 0
         for file in lis:
             self.table.insert(
-                parent='', index='end', iid={count}, text='', values=(file, lis[file]))
+                parent='', index='end', iid={count}, text='', values=(file, len(lis[file])))
             count += 1
 
         self.update_idletasks()
+
+
+class List_Mine_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.app_controller = app_controller
+        self.data = []
+
+        self.button_back = tk.Button(
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+        self.button_back.grid(row=0, column=0)
+
+        self.button_get = tk.Button(
+            self, text="Update my list", command=lambda: self.get_my_file())
+        self.button_get.grid(row=1, column=0)
+        self.grid_columnconfigure(0, weight=1)
+        tk.Label(self, text="File Name", anchor="w").grid(
+            row=2, column=0, sticky="ew")
+        tk.Label(self, text="Action", anchor="w").grid(
+            row=2, column=1, sticky="ew")
+
+    def get_my_file(self):
+        for label, button in self.data:
+            label.grid_forget()
+            button.grid_forget()
+        self.data = []
+        row = 3
+        lis = self.app_controller.client.get_my_file()
+        lis = json.loads(lis)
+
+        for file_name in lis:
+            file_label = tk.Label(self, text=file_name, anchor="w")
+            action_button = tk.Button(
+                self, text="Delete", command=lambda file_name=file_name: self.delete_file(file_name))
+            self.data.append((file_label, action_button))
+
+            file_label.grid(row=row, column=0, sticky="ew")
+            action_button.grid(row=row, column=1, sticky="ew")
+
+            row += 1
+
+        self.update_idletasks()
+
+    def delete_file(self, file_name):
+        self.app_controller.client.delete_file(file_name)
+        self.get_my_file()
 
 
 class App(tk.Tk):
@@ -234,7 +286,7 @@ class App(tk.Tk):
 
         self.frames = {}
 
-        for f in {Dead_Page, Start_Page, Share_Page, Download_Page, List_Page}:
+        for f in {Dead_Page, Start_Page, Share_Page, Download_Page, List_Page, List_Mine_Page}:
             frame = f(self.container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[f] = frame

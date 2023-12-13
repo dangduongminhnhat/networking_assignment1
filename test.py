@@ -1,47 +1,52 @@
-from tkinter import *
-from tkinter import ttk
+import tkinter as tk
+import time
 
 
-ws = Tk()
-ws.title('PythonGuides')
-ws.geometry('500x500')
-ws['bg'] = '#AC99F2'
+class Example(tk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        tk.LabelFrame.__init__(self, *args, **kwargs)
+        data = [
+            # Nr. Name  Active
+            [1,   "ST", True],
+            [2,   "SO", False],
+            [3,   "SX", True],
+        ]
 
-game_frame = Frame(ws)
-game_frame.pack()
+        self.grid_columnconfigure(1, weight=1)
+        tk.Label(self, text="Nr.", anchor="w").grid(
+            row=0, column=0, sticky="ew")
+        tk.Label(self, text="Name", anchor="w").grid(
+            row=0, column=1, sticky="ew")
+        tk.Label(self, text="Active", anchor="w").grid(
+            row=0, column=2, sticky="ew")
+        tk.Label(self, text="Action", anchor="w").grid(
+            row=0, column=3, sticky="ew")
 
-my_game = ttk.Treeview(game_frame)
+        row = 1
+        for (nr, name, active) in data:
+            nr_label = tk.Label(self, text=str(nr), anchor="w")
+            name_label = tk.Label(self, text=name, anchor="w")
+            action_button = tk.Button(
+                self, text="Delete", command=lambda nr=nr: self.delete(nr))
+            active_cb = tk.Checkbutton(self, onvalue=True, offvalue=False)
+            if active:
+                active_cb.select()
+            else:
+                active_cb.deselect()
 
-my_game['columns'] = ('player_id', 'player_name',
-                      'player_Rank', 'player_states', 'player_city')
+            nr_label.grid(row=row, column=0, sticky="ew")
+            name_label.grid(row=row, column=1, sticky="ew")
+            active_cb.grid(row=row, column=2, sticky="ew")
+            action_button.grid(row=row, column=3, sticky="ew")
 
-my_game.column("#0", width=0,  stretch=NO)
-my_game.column("player_id", anchor=CENTER, width=80)
-my_game.column("player_name", anchor=CENTER, width=80)
-my_game.column("player_Rank", anchor=CENTER, width=80)
-my_game.column("player_states", anchor=CENTER, width=80)
-my_game.column("player_city", anchor=CENTER, width=80)
+            row += 1
 
-my_game.heading("#0", text="", anchor=CENTER)
-my_game.heading("player_id", text="Id", anchor=CENTER)
-my_game.heading("player_name", text="Name", anchor=CENTER)
-my_game.heading("player_Rank", text="Rank", anchor=CENTER)
-my_game.heading("player_states", text="States", anchor=CENTER)
-my_game.heading("player_city", text="States", anchor=CENTER)
+    def delete(self, nr):
+        print("deleting...nr=", nr)
 
-my_game.insert(parent='', index='end', iid=0, text='',
-               values=('1', 'Ninja', '101', 'Oklahoma', 'Moore'))
-my_game.insert(parent='', index='end', iid=1, text='',
-               values=('2', 'Ranger', '102', 'Wisconsin', 'Green Bay'))
-my_game.insert(parent='', index='end', iid=2, text='',
-               values=('3', 'Deamon', '103', 'California', 'Placentia'))
-my_game.insert(parent='', index='end', iid=3, text='',
-               values=('4', 'Dragon', '104', 'New York', 'White Plains'))
-my_game.insert(parent='', index='end', iid=4, text='',
-               values=('5', 'CrissCross', '105', 'California', 'San Diego'))
-my_game.insert(parent='', index='end', iid=5, text='',
-               values=('6', 'ZaqueriBlack', '106', 'Wisconsin', 'TONY'))
 
-my_game.pack()
-
-ws.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    Example(root, text="Hello").pack(
+        side="top", fill="both", expand=True, padx=10, pady=10)
+    root.mainloop()

@@ -22,7 +22,7 @@ class Control_Page(tk.Frame):
         self.entry_host_name = tk.Entry(self, textvariable=self.host_ip)
         self.entry_host_name.pack()
 
-        self.label_port = tk.Label(self, text="Port")
+        self.label_port = tk.Label(self, text="Port:")
         self.label_port.pack()
 
         self.entry_address = tk.Entry(self, textvariable=self.host_address)

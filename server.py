@@ -3,7 +3,6 @@ import threading
 import json
 
 HOST = "127.0.0.1"
-IP = "192.168.1.12"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -47,7 +46,11 @@ class Server:
         accept = self.accept_connection(conn, addr)
 
         while accept:
-            end = self.receive_message(conn, addr)
+            try:
+                end = self.receive_message(conn, addr)
+            except:
+                self.clients.pop(addr, None)
+                break
             if end:
                 self.clients.pop(addr, None)
                 break
@@ -78,6 +81,10 @@ class Server:
                 end = self.send_list_clients(conn, addr)
             elif message == "GET LIST":
                 end = self.send_list(conn, addr)
+            elif message == "GET MY FILE":
+                end = self.send_my_file(conn, addr)
+            elif message == "DELETE FILE":
+                end = self.delete_file(conn, addr)
             return end
         except:
             return True
@@ -174,3 +181,29 @@ class Server:
         dic = json.dumps(dic)
 
         conn.sendall(dic.encode(FORMAT))
+        return False
+
+    def send_my_file(self, conn, addr):
+        try:
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            return True
+        rec = conn.recv(1024).decode(FORMAT)
+        dic = self.clients[addr]
+        dic = json.dumps(dic)
+
+        conn.sendall(dic.encode(FORMAT))
+        return False
+
+    def delete_file(self, conn, addr):
+        try:
+            conn.sendall("RESPONSE 200".encode(FORMAT))
+        except:
+            return True
+        file_name = conn.recv(1024).decode(FORMAT)
+        self.clients[addr].pop(file_name)
+        self.file_names[file_name].remove(addr)
+        if len(self.file_names[file_name]) == 0:
+            self.file_names.pop(file_name)
+        conn.sendall("DELETED".encode(FORMAT))
+        return False

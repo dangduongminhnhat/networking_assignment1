@@ -8,10 +8,13 @@ HOST = "127.0.0.1"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
+MAX_CLIENTS = 3
+
 
 class Client:
     def __init__(self):
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.number_of_clients = 0
 
         print("CLIENT SIDE")
         self.status = self.init_connection()
@@ -89,8 +92,6 @@ class Client:
                 if (addr[0], addr[1]) == self.soc.getsockname():
                     if os.path.exists(local_file):
                         return local_file
-                    else:
-                        return False
                 else:
                     get = self.get_file(addr, local_file)
                 if get:
@@ -170,19 +171,21 @@ class Client:
                 break
 
     def handle_client(self, conn, addr):
-        print("client address:", addr)
-        print("connection:", conn.getsockname())
-
         try:
             message = conn.recv(1024).decode(FORMAT)
-            print("client:", addr, "sends", message)
 
             if message == "PING":
+                print("SERVER want to ping")
                 conn.sendall("RESPONSE 200".encode(FORMAT))
-            if message == "FETCH":
-                conn.sendall("RESPONSE 200".encode(FORMAT))
-
-                self.send_file(conn, addr)
+            elif message == "FETCH":
+                if self.number_of_clients < MAX_CLIENTS:
+                    self.number_of_clients += 1
+                    print("client:", addr, "sends", message)
+                    conn.sendall("RESPONSE 200".encode(FORMAT))
+                    self.send_file(conn, addr)
+                    self.number_of_clients -= 1
+                else:
+                    conn.sendall("RESPONSE 404".encode(FORMAT))
         except:
             return
 
@@ -219,5 +222,35 @@ class Client:
 
                 lis = self.receive_message()
                 return lis
+        except:
+            return None
+
+    def get_my_file(self):
+        try:
+            self.send_message("GET MY FILE")
+
+            rec = self.receive_message()
+            print("Server sends", rec)
+
+            if rec == "RESPONSE 200":
+                self.send_message("SEND")
+
+                lis = self.receive_message()
+                return lis
+        except:
+            return None
+
+    def delete_file(self, file_name):
+        try:
+            self.send_message("DELETE FILE")
+
+            rec = self.receive_message()
+            print("Server sends", rec)
+
+            if rec == "RESPONSE 200":
+                self.send_message(file_name)
+
+                rec = self.receive_message()
+                print("Server sends", rec)
         except:
             return None
