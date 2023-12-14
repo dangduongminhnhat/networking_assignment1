@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from client import Client
 from tkinter.filedialog import askopenfile
 import threading
@@ -27,19 +28,19 @@ class Start_Page(tk.Frame):
 
         self.button_share = tk.Button(
             self, text="Share your file", command=lambda: app_controller.show_page(Share_Page))
-        self.button_share.pack()
+        self.button_share.pack(fill=tk.X)
 
         self.button_download = tk.Button(
             self, text="Download file", command=lambda: app_controller.show_page(Download_Page))
-        self.button_download.pack()
+        self.button_download.pack(fill=tk.X)
 
         self.button_list = tk.Button(
             self, text="List file", command=lambda: app_controller.show_page(List_Page))
-        self.button_list.pack()
+        self.button_list.pack(fill=tk.X)
 
         self.button_mine = tk.Button(
             self, text="Get my published file", command=lambda: app_controller.show_page(List_Mine_Page))
-        self.button_mine.pack()
+        self.button_mine.pack(fill=tk.X)
 
 
 class Share_Page(tk.Frame):
@@ -50,35 +51,36 @@ class Share_Page(tk.Frame):
 
         self.button_back = tk.Button(
             self, text="Back", command=lambda: app_controller.show_page(Start_Page))
-        self.button_back.pack()
-
+        self.button_back.grid(row=0, column=0, sticky="ew")
+        self.grid_columnconfigure([0, 1], weight=1)
         self.label_work = tk.Label(self, text="Choose your file:")
-        self.label_work.pack()
+        self.label_work.grid(row=1, column=0, sticky="ew")
 
         self.button_choose = tk.Button(
             self, text="Select file", command=self.select_file)
-        self.button_choose.pack()
+        self.button_choose.grid(row=1, column=1, sticky="ew")
 
         self.label_choose = tk.Label(self, text="Input your file name:")
-        self.label_choose.pack()
+        self.label_choose.grid(row=2, column=0, sticky="ew")
 
         self.entry_local_name_var = tk.StringVar()
 
         self.entry_local_name = tk.Entry(
             self, textvariable=self.entry_local_name_var)
-        self.entry_local_name.pack()
+        self.entry_local_name.grid(row=2, column=1, sticky="ew")
 
         self.button_publish = tk.Button(
             self, text="Publish", command=self.publish)
-        self.button_publish.pack()
+        self.button_publish.grid(row=0, column=1, sticky="ew")
 
-        self.label_file = tk.Label(self, text="Nothing to share")
-        self.label_file.pack()
+        self.label_file = tk.Label(self, text="")
+        self.label_file.grid(row=3, column=0, sticky="ew")
 
     def select_file(self):
         self.file = askopenfile()
 
-        self.label_file["text"] = "Your selected file is " + self.file.name
+        messagebox.showinfo(
+            "Information", "Your selected file is " + self.file.name)
         self.update_idletasks()
 
     def publish(self):
@@ -86,8 +88,8 @@ class Share_Page(tk.Frame):
             local_name = self.file.name
             self.file = None
         except:
-            self.label_file["text"] = "You have to select file"
             self.update_idletasks()
+            messagebox.showwarning("Warning", "You have to select file")
 
             return
         file_name = self.entry_local_name_var.get()
@@ -95,16 +97,16 @@ class Share_Page(tk.Frame):
         if "." in local_name:
             post_fix_local = local_name.split(".")[-1]
             if not "." in file_name:
-                self.label_file["text"] = "Your file's name has to be *." + \
-                    post_fix_local
                 self.update_idletasks()
+                messagebox.showwarning(
+                    "Warning", "Your file's name has to be *." + post_fix_local)
 
                 return
             post_fix_file = file_name.split(".")[-1]
             if post_fix_file != post_fix_local:
-                self.label_file["text"] = "Your file's name has to be *." + \
-                    post_fix_local
                 self.update_idletasks()
+                messagebox.showwarning(
+                    "Warning", "Your file's name has to be *." + post_fix_local)
 
                 return
 
@@ -114,11 +116,15 @@ class Share_Page(tk.Frame):
 
         pub = self.app_controller.client.publish(file_name, local_name)
         if pub:
-            self.label_file["text"] = "Publish sucessfully, share new file"
+            self.label_file["text"] = ""
             self.update_idletasks()
+            messagebox.showinfo(
+                "Information", "Publish sucessfully, share new file")
         else:
-            self.label_file["text"] = "Publish failed, share new file"
+            self.label_file["text"] = ""
             self.update_idletasks()
+            messagebox.showerror(
+                "Information", "Publish failed, share new file")
 
 
 class Download_Page(tk.Frame):
@@ -126,26 +132,27 @@ class Download_Page(tk.Frame):
         tk.Frame.__init__(self, parrent)
 
         self.app_controller = app_controller
+        self.grid_columnconfigure([0, 1], weight=1)
 
         self.button_back = tk.Button(
             self, text="Back", command=lambda: app_controller.show_page(Start_Page))
-        self.button_back.pack()
+        self.button_back.grid(row=0, column=0, sticky="ew")
 
         self.label_work = tk.Label(self, text="Input name file to download:")
-        self.label_work.pack()
+        self.label_work.grid(row=1, column=0, sticky="ew")
 
         self.entry_file_name_var = tk.StringVar()
 
         self.entry_file_name = tk.Entry(
             self, textvariable=self.entry_file_name_var)
-        self.entry_file_name.pack()
+        self.entry_file_name.grid(row=1, column=1, sticky="ew")
 
         self.button_get = tk.Button(
             self, text="Download", command=self.download_file)
-        self.button_get.pack()
+        self.button_get.grid(row=0, column=1, sticky="ew")
 
         self.label_notice = tk.Label(self, text="")
-        self.label_notice.pack()
+        self.label_notice.grid(row=2, column=0, sticky="ew")
 
     def download_file(self):
         file_name = self.entry_file_name_var.get()
@@ -160,12 +167,14 @@ class Download_Page(tk.Frame):
         get = self.app_controller.client.fetch(file_name)
 
         if get:
-            self.label_notice["text"] = "Your file in " + \
-                get + ", download new file"
+            self.label_notice["text"] = ""
             self.update_idletasks()
+            messagebox.showinfo(
+                "Information", "Your file in " + get + ", download new file")
         else:
-            self.label_notice["text"] = "Download failed, download new file"
+            self.label_notice["text"] = ""
             self.update_idletasks()
+            messagebox.showerror("Error", "Download failed, download new file")
 
 
 class List_Page(tk.Frame):
@@ -176,7 +185,7 @@ class List_Page(tk.Frame):
 
         self.button_back = tk.Button(
             self, text="Back", command=lambda: app_controller.show_page(Start_Page))
-        self.button_back.pack()
+        self.button_back.pack(fill=tk.X)
 
         self.scroll = tk.Scrollbar(self)
         self.scroll.pack(side='right', fill='y')
@@ -186,7 +195,7 @@ class List_Page(tk.Frame):
 
         self.table = ttk.Treeview(
             self, yscrollcommand=self.scroll.set, xscrollcommand=self.scroll.set)
-        self.table.pack()
+        self.table.pack(fill=tk.X)
 
         self.scroll.config(command=self.table.yview)
         self.scroll.config(command=self.table.xview)
@@ -204,7 +213,7 @@ class List_Page(tk.Frame):
 
         self.button_get = tk.Button(
             self, text="Get list", command=self.get_list)
-        self.button_get.pack()
+        self.button_get.pack(fill=tk.X)
 
     def get_list(self):
         for row in self.table.get_children():
@@ -231,12 +240,12 @@ class List_Mine_Page(tk.Frame):
 
         self.button_back = tk.Button(
             self, text="Back", command=lambda: app_controller.show_page(Start_Page))
-        self.button_back.grid(row=0, column=0)
+        self.button_back.grid(row=0, column=0, sticky="ew")
 
         self.button_get = tk.Button(
             self, text="Update my list", command=lambda: self.get_my_file())
-        self.button_get.grid(row=1, column=0)
-        self.grid_columnconfigure(0, weight=1)
+        self.button_get.grid(row=0, column=1, sticky="ew")
+        self.grid_columnconfigure([0, 1], weight=1)
         tk.Label(self, text="File Name", anchor="w").grid(
             row=2, column=0, sticky="ew")
         tk.Label(self, text="Action", anchor="w").grid(
@@ -276,7 +285,7 @@ class App(tk.Tk):
         self.client = Client()
 
         self.title("File Sharing Application")
-        self.geometry("500x500")
+        self.geometry("400x300")
 
         self.container = tk.Frame()
 

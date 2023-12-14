@@ -177,6 +177,14 @@ class Client:
             if message == "PING":
                 print("SERVER want to ping")
                 conn.sendall("RESPONSE 200".encode(FORMAT))
+            elif message == "DISCOVER":
+                print("SERVER want to discover")
+                conn.sendall("RESPONSE 200".encode(FORMAT))
+
+                dic = conn.recv(1024).decode(FORMAT)
+                dic = self.discover(dic)
+
+                conn.sendall(dic.encode(FORMAT))
             elif message == "FETCH":
                 if self.number_of_clients < MAX_CLIENTS:
                     self.number_of_clients += 1
@@ -188,6 +196,14 @@ class Client:
                     conn.sendall("RESPONSE 404".encode(FORMAT))
         except:
             return
+
+    def discover(self, dic):
+        dic = json.loads(dic)
+        temp_dic = {}
+        for file_name in dic:
+            if os.path.exists(dic[file_name]):
+                temp_dic[file_name] = dic[file_name]
+        return json.dumps(temp_dic)
 
     def send_file(self, conn, addr):
         local_file = conn.recv(1024).decode(FORMAT)

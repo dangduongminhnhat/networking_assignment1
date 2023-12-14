@@ -134,7 +134,9 @@ class Server:
                 if not host in self.clients or not self.ping(host):
                     continue
                 else:
-                    clients.append(host)
+                    self.discover(host)
+                    if file_name in self.clients[host]:
+                        clients.append(host)
             self.file_names[file_name] = clients
             if len(self.file_names[file_name]) == 0:
                 self.file_names.pop(file_name)
@@ -169,7 +171,29 @@ class Server:
             return False
 
     def discover(self, hostname):
-        return self.clients[hostname]
+        if not hostname in self.clients:
+            return {}
+        try:
+            temp_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            temp_soc.connect(hostname)
+            temp_soc.sendall("DISCOVER".encode(FORMAT))
+
+            rec = temp_soc.recv(1024).decode(FORMAT)
+            print("client", hostname, "sends", rec)
+
+            if rec == "RESPONSE 200":
+                dic = self.clients[hostname]
+                dic = json.dumps(dic)
+
+                temp_soc.sendall(dic.encode(FORMAT))
+                dic = temp_soc.recv(1024).decode(FORMAT)
+                self.clients[hostname] = json.loads(dic)
+                return self.clients[hostname]
+            else:
+                return {}
+
+        except:
+            return {}
 
     def send_list(self, conn, addr):
         try:

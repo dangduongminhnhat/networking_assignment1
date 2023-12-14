@@ -86,17 +86,31 @@ class Control_Page(tk.Frame):
         self.update_idletasks()
 
     def discover(self):
-        self.ping()
-        if self.lable_notice["text"] == "Alive":
-            lis = self.app_controller.server.discover((self.host, self.port))
+        self.host = self.host_ip.get()
+        self.host_ip.set("")
 
-            count = 0
-            for file in lis:
-                self.table.insert(
-                    parent='', index='end', iid={count}, text='', values=(file, lis[file]))
-                count += 1
+        self.port = self.host_address.get()
+        self.host_address.set("")
 
+        self.update_idletasks()
+
+        try:
+            self.port = int(self.port)
+        except:
+            self.lable_notice["text"] = "Not Found"
             self.update_idletasks()
+            return
+
+        lis = self.app_controller.server.discover((self.host, self.port))
+        for row in self.table.get_children():
+            self.table.delete(row)
+        count = 0
+        for file in lis:
+            self.table.insert(
+                parent='', index='end', iid={count}, text='', values=(file, lis[file]))
+            count += 1
+
+        self.update_idletasks()
 
 
 class Server_App(tk.Tk):
