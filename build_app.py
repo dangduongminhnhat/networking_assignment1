@@ -20,26 +20,26 @@ class Start_Page(tk.Frame):
         tk.Frame.__init__(self, parrent)
 
         self.label_welcome = tk.Label(
-            self, text="Welcome to our file-sharing app")
-        self.label_welcome.pack()
+            self, text="Bach Khoa File Sharing App", fg="white", bg="blue", font=("Times New Roman", 18), background="blue")
+        self.label_welcome.pack(fill=tk.X)
 
-        self.label_option = tk.Label(self, text="Choose your option:")
-        self.label_option.pack()
+        # self.label_option = tk.Label(self, text="Choose your option:")
+        # self.label_option.pack(fill=tk.X)
 
         self.button_share = tk.Button(
-            self, text="Share your file", command=lambda: app_controller.show_page(Share_Page))
+            self, text="Share your file", command=lambda: app_controller.show_page(Share_Page), bd='5')
         self.button_share.pack(fill=tk.X)
 
         self.button_download = tk.Button(
-            self, text="Download file", command=lambda: app_controller.show_page(Download_Page))
+            self, text="Download file", command=lambda: app_controller.show_page(Download_Page), bd='5')
         self.button_download.pack(fill=tk.X)
 
         self.button_list = tk.Button(
-            self, text="List file", command=lambda: app_controller.show_page(List_Page))
+            self, text="List file", command=lambda: app_controller.show_page(List_Page), bd='5')
         self.button_list.pack(fill=tk.X)
 
         self.button_mine = tk.Button(
-            self, text="Get my published file", command=lambda: app_controller.show_page(List_Mine_Page))
+            self, text="Get my published file", command=lambda: app_controller.show_page(List_Mine_Page), bd='5')
         self.button_mine.pack(fill=tk.X)
 
 
@@ -50,17 +50,19 @@ class Share_Page(tk.Frame):
         self.app_controller = app_controller
 
         self.button_back = tk.Button(
-            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page), bd="5")
         self.button_back.grid(row=0, column=0, sticky="ew")
         self.grid_columnconfigure([0, 1], weight=1)
-        self.label_work = tk.Label(self, text="Choose your file:")
+        self.label_work = tk.Label(
+            self, text="Choose your file:")
         self.label_work.grid(row=1, column=0, sticky="ew")
 
         self.button_choose = tk.Button(
-            self, text="Select file", command=self.select_file)
+            self, text="Select file", command=self.select_file, bd='5')
         self.button_choose.grid(row=1, column=1, sticky="ew")
 
-        self.label_choose = tk.Label(self, text="Input your file name:")
+        self.label_choose = tk.Label(
+            self, text="Input your file name:")
         self.label_choose.grid(row=2, column=0, sticky="ew")
 
         self.entry_local_name_var = tk.StringVar()
@@ -70,7 +72,7 @@ class Share_Page(tk.Frame):
         self.entry_local_name.grid(row=2, column=1, sticky="ew")
 
         self.button_publish = tk.Button(
-            self, text="Publish", command=self.publish)
+            self, text="Publish", command=self.publish, bd='5')
         self.button_publish.grid(row=0, column=1, sticky="ew")
 
         self.label_file = tk.Label(self, text="")
@@ -135,7 +137,7 @@ class Download_Page(tk.Frame):
         self.grid_columnconfigure([0, 1], weight=1)
 
         self.button_back = tk.Button(
-            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page), bd='5')
         self.button_back.grid(row=0, column=0, sticky="ew")
 
         self.label_work = tk.Label(self, text="Input name file to download:")
@@ -148,7 +150,7 @@ class Download_Page(tk.Frame):
         self.entry_file_name.grid(row=1, column=1, sticky="ew")
 
         self.button_get = tk.Button(
-            self, text="Download", command=self.download_file)
+            self, text="Download", command=self.download_file, bd='5')
         self.button_get.grid(row=0, column=1, sticky="ew")
 
         self.label_notice = tk.Label(self, text="")
@@ -184,7 +186,7 @@ class List_Page(tk.Frame):
         self.app_controller = app_controller
 
         self.button_back = tk.Button(
-            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page), bd=5)
         self.button_back.pack(fill=tk.X)
 
         self.scroll = tk.Scrollbar(self)
@@ -212,7 +214,7 @@ class List_Page(tk.Frame):
             "Host Name", text="Number of owners", anchor="center")
 
         self.button_get = tk.Button(
-            self, text="Get list", command=self.get_list)
+            self, text="Get list", command=self.get_list, bd='5')
         self.button_get.pack(fill=tk.X)
 
     def get_list(self):
@@ -239,11 +241,11 @@ class List_Mine_Page(tk.Frame):
         self.data = []
 
         self.button_back = tk.Button(
-            self, text="Back", command=lambda: app_controller.show_page(Start_Page))
+            self, text="Back", command=lambda: app_controller.show_page(Start_Page), bd='5')
         self.button_back.grid(row=0, column=0, sticky="ew")
 
         self.button_get = tk.Button(
-            self, text="Update my list", command=lambda: self.get_my_file())
+            self, text="Update my list", command=lambda: self.get_my_file(), bd='5')
         self.button_get.grid(row=0, column=1, sticky="ew")
         self.grid_columnconfigure([0, 1], weight=1)
         tk.Label(self, text="File Name", anchor="w").grid(
@@ -263,7 +265,7 @@ class List_Mine_Page(tk.Frame):
         for file_name in lis:
             file_label = tk.Label(self, text=file_name, anchor="w")
             action_button = tk.Button(
-                self, text="Delete", command=lambda file_name=file_name: self.delete_file(file_name))
+                self, text="Delete", command=lambda file_name=file_name: self.delete_file(file_name), bd='5')
             self.data.append((file_label, action_button))
 
             file_label.grid(row=row, column=0, sticky="ew")
@@ -285,7 +287,7 @@ class App(tk.Tk):
         self.client = Client()
 
         self.title("File Sharing Application")
-        self.geometry("400x300")
+        self.geometry("400x310")
 
         self.container = tk.Frame()
 

@@ -4,7 +4,7 @@ import threading
 import os
 from tkinter.filedialog import asksaveasfilename
 
-HOST = "127.0.0.1"
+HOST = "192.168.1.217"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
