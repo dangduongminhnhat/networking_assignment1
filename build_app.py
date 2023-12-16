@@ -30,16 +30,12 @@ class Start_Page(tk.Frame):
             self, text="Share your file", command=lambda: app_controller.show_page(Share_Page), bd='5')
         self.button_share.pack(fill=tk.X)
 
-        self.button_download = tk.Button(
-            self, text="Download file", command=lambda: app_controller.show_page(Download_Page), bd='5')
-        self.button_download.pack(fill=tk.X)
-
-        self.button_list = tk.Button(
-            self, text="List file", command=lambda: app_controller.show_page(List_Page), bd='5')
-        self.button_list.pack(fill=tk.X)
-
         self.button_mine = tk.Button(
             self, text="Get my published file", command=lambda: app_controller.show_page(List_Mine_Page), bd='5')
+        self.button_mine.pack(fill=tk.X)
+
+        self.button_mine = tk.Button(
+            self, text="Download file", command=lambda: app_controller.show_page(Combine_Page), bd='5')
         self.button_mine.pack(fill=tk.X)
 
 
@@ -185,10 +181,6 @@ class List_Page(tk.Frame):
 
         self.app_controller = app_controller
 
-        self.button_back = tk.Button(
-            self, text="Back", command=lambda: app_controller.show_page(Start_Page), bd=5)
-        self.button_back.pack(fill=tk.X)
-
         self.scroll = tk.Scrollbar(self)
         self.scroll.pack(side='right', fill='y')
 
@@ -280,6 +272,19 @@ class List_Mine_Page(tk.Frame):
         self.get_my_file()
 
 
+class Combine_Page(tk.Frame):
+    def __init__(self, parrent, app_controller):
+        tk.Frame.__init__(self, parrent)
+
+        self.grid_columnconfigure([0], weight=1)
+
+        block1 = Download_Page(self, app_controller)
+        block1.grid(row=0, column=0, sticky="nsew", padx=(5, 5))
+
+        block2 = List_Page(self, app_controller)
+        block2.grid(row=1, column=0, sticky="nsew", padx=(5, 5))
+
+
 class App(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
@@ -287,7 +292,7 @@ class App(tk.Tk):
         self.client = Client()
 
         self.title("File Sharing Application")
-        self.geometry("400x310")
+        self.geometry("400x340")
 
         self.container = tk.Frame()
 
@@ -297,7 +302,7 @@ class App(tk.Tk):
 
         self.frames = {}
 
-        for f in {Dead_Page, Start_Page, Share_Page, Download_Page, List_Page, List_Mine_Page}:
+        for f in {Dead_Page, Start_Page, Share_Page, Combine_Page, List_Mine_Page}:
             frame = f(self.container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[f] = frame
