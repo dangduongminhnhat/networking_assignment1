@@ -256,6 +256,7 @@ class List_Mine_Page(tk.Frame):
 
         for file_name in lis:
             file_label = tk.Label(self, text=file_name, anchor="center")
+            file_label = tk.Label(self, text=file_name, anchor="center")
             action_button = tk.Button(
                 self, text="Delete", command=lambda file_name=file_name: self.delete_file(file_name), bd='5')
             self.data.append((file_label, action_button))
