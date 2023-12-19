@@ -109,7 +109,7 @@ class Control_Page(tk.Frame):
             self.table.insert(
                 parent='', index='end', iid={count}, text='', values=(file, lis[file]))
             count += 1
-
+        self.lable_notice["text"] = ""
         self.update_idletasks()
 
 

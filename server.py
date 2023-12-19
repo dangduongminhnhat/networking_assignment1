@@ -2,7 +2,7 @@ import socket
 import threading
 import json
 
-HOST = "192.168.1.217"
+HOST = "192.168.240.248"
 SERVER_PORT = 65432
 FORMAT = "utf8"
 
@@ -97,6 +97,7 @@ class Server:
         try:
             rec = conn.recv(1024).decode(FORMAT)
             rec = json.loads(rec)
+            print("client:", addr, "sends", rec)
 
             if not "file_name" in rec or not "local_name" in rec:
                 conn.sendall("RESPONSE 404".encode(FORMAT))

@@ -240,9 +240,9 @@ class List_Mine_Page(tk.Frame):
             self, text="Update my list", command=lambda: self.get_my_file(), bd='5')
         self.button_get.grid(row=0, column=1, sticky="ew")
         self.grid_columnconfigure([0, 1], weight=1)
-        tk.Label(self, text="File Name", anchor="w").grid(
+        tk.Label(self, text="File Name", anchor="center", justify='center').grid(
             row=2, column=0, sticky="ew")
-        tk.Label(self, text="Action", anchor="w").grid(
+        tk.Label(self, text="Action", anchor="center", justify='center').grid(
             row=2, column=1, sticky="ew")
 
     def get_my_file(self):
@@ -255,13 +255,13 @@ class List_Mine_Page(tk.Frame):
         lis = json.loads(lis)
 
         for file_name in lis:
-            file_label = tk.Label(self, text=file_name, anchor="w")
+            file_label = tk.Label(self, text=file_name, anchor="center")
             action_button = tk.Button(
                 self, text="Delete", command=lambda file_name=file_name: self.delete_file(file_name), bd='5')
             self.data.append((file_label, action_button))
 
             file_label.grid(row=row, column=0, sticky="ew")
-            action_button.grid(row=row, column=1, sticky="ew")
+            action_button.grid(row=row, column=1)
 
             row += 1
 
